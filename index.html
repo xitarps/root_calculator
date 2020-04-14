@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Root calculator</title>
+</head>
+
+<body>
+    <script>
+        //
+        /*
+        ----------------INDEX--------------
+        1-Variables (line 25)
+
+        2- Program itself(line 35)
+        
+        3-Functions (line 40)
+
+        4-Visual Explanation of how it wors(line 150)
+
+
+        */
+        //-------------variables------------
+        let num = Number(prompt("raiz de qual numero?"))
+        let resultado;
+        let temVirgula = false;
+        let subtracaoDaRaiz;
+        let dobroDoResultadoAtual = 0;
+        let digito;
+        let times = prompt("quantas casas?");
+
+
+        //-----------Program----------------
+        window.onload = () => {
+            printResultado(root(num,times))
+        }
+
+        //-----------functions---------------
+
+
+        function root(numero,casas) {
+            //qual menor numero ao quadrado cabe dentro da raiz
+            resultado = menorNumeroCabeNaRaiz(numero);
+
+            //raiz do numero - quadrado do menor numero que cabe na raiz
+            subtracaoDaRaiz = num - quadrado(resultado);
+
+            //dobro do resultado
+            dobroDoResultadoAtual = dobro(resultado)
+
+            //espera-se que o digito seja 0 para dar virgula
+            digito = menorMultiplicador(dobroDoResultadoAtual, subtracaoDaRaiz);
+
+            //adiciona 2 zeros ao resultado da reducao da raiz
+            subtracaoDaRaiz = addDoisZeros(subtracaoDaRaiz);
+
+            //se nao tem virgula, adicionar virgula
+            (!temVirgula) ? resultado = addVirgula(resultado) : "";
+            //desativa virgula
+            temVirgula = true;
+
+            //rotina de repetição para cada casa desejada de precisão
+            for (i=casas; i > 0; i--) {
+                //dobro do resultado, sendo tratado com string para converter a.b para ab
+                resultado=resultado+"";
+                dobroDoResultadoAtual = dobro(resultado.replace(".",""));
+                //console.log(resultado);
+                
+                //espera-se que o digito seja 0 para dar virgula
+                digito = menorMultiplicador(dobroDoResultadoAtual, subtracaoDaRaiz);
+
+                //adiciona o digito resultante ao resultado final
+                resultado = adddigitoPossivelAserAddAoResultado(resultado, digito)
+
+                //redução da raiz - X digito * digito exemplo:    raiz - 4_*_   --->   raiz - 42*2
+                subtracaoDaRaiz = subtracaoDaRaiz - (adddigitoPossivelAserAddAoResultado(dobroDoResultadoAtual, digito) * digito)
+
+                //adiciona 2 zeros ao resultado da reducao da raiz
+                subtracaoDaRaiz = addDoisZeros(subtracaoDaRaiz);
+            }
+
+            //Se xy,000...   entao ajustar para xy apenas
+            resultado = ajustarseRaizExata(resultado);
+
+            //mostrar resultado
+            return resultado
+
+        }
+
+        // add dot ->   '2' -> '2,'
+        function addVirgula(x) {
+            return (x + ".")
+
+        }
+
+        //add digit to number -> number 'a', digit 'b' -> then 'ab'
+        function adddigitoPossivelAserAddAoResultado(x, d) {
+            return x + "" + String(d);
+        }
+        
+        //add 2 zeros to a number -> number 'a' -> then a00
+        function addDoisZeros(x) {
+            return (x + "00")
+
+        }
+
+        //select wich digit at power of 2 is smaller or equal to root
+        function menorNumeroCabeNaRaiz(raiz) {
+            let numTemp = 0;
+            for (i = 0; quadrado(i) <= raiz; i++) {
+                numTemp = i;
+            }
+            return numTemp;
+        }
+
+        //follow this rule =>  ab*b <= x wich trys b from 0 to 9
+        function menorMultiplicador(base, comparador) {
+            let temp;
+            for (let i = 0; i <= 9; i++) {
+                if (Number(base + "" + i) * i <= comparador) {
+                    temp = i;
+                }
+            }
+            return temp;
+        }
+
+        //if result = "a,0000..."  return "a"
+        function ajustarseRaizExata(l){
+            let lInteira = Math.floor(l)
+            return (lInteira == l)?lInteira:l;
+        }
+
+        //returns 2 times number
+        function dobro(k) {
+            return (2 * k);
+        }
+        
+        //returns number squared
+        function quadrado(x) {
+            return x * x;
+        }
+
+        //justo if would like to manipulate de output
+        function printResultado(result){
+            alert(result);
+        }
+
+        //--------Explanation-----------
+
+        /*
+
+
+          /---------|12
+        \/   145    |__________
+                    |
+
+        0*0=0      <145? true
+        ...
+        12*12=144  <145? true
+        13*13=169  <145? false
+
+        entao... resultado = 12
+
+
+          /---------|12
+        \/   145    |__________
+                    |2*(resultado) 
+
+          /---------|12
+        \/   145    |__________
+            -144    |2*(12) =24
+
+          /---------|12
+        \/   145    |__________
+            -144    |2*(12) =24
+
+          /---------|12
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |
+        
+          /---------|12
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |
+              1     |
+
+          /---------|12
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |24_*_ <= 1 ?   (0-9)
+              1     |
+
+          /---------|12
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     |     
+
+        12 "."? false... so "12."
+
+          /---------|12.
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            1+"00"  |
+
+          /---------|12.
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(resultado)=24
+
+          /---------|12.
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+                    |24_*_ <=100 (digito: 0-9)
+
+          /---------|12.
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+                    |240*0 = (digito) 0
+
+          /---------|12.
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -digito |240*0 = (digito) 0
+
+          /---------|12.
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+
+                         |--------------------
+                        \|/                   |
+          /---------|12.                      |
+        \/   145    |__________               |
+            -144    |2*(12) =24               |
+            -----   |240*0 <= 1 (digito) 0    |
+              1     |                         |
+           ---------|--------------           |
+            100     |2*(12.)=24               |
+            -0      |240*0 = (digito) 0-------|
+            -----   |
+            100     |
+
+
+                         |--------------------
+                        \|/                   |
+          /---------|12. 0                    |
+        \/   145    |__________               |
+            -144    |2*(12) =24               |
+            -----   |240*0 <= 1 (digito) 0    |
+              1     |                         |
+           ---------|--------------           |
+            100     |2*(12.)=24               |
+            -0      |240*0 = (digito) 0-------|
+            -----   |
+            100     |
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           100+"00" |
+
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           10000    |2*(resultado)
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           10000    |2*(12.0) -> ignore dot...  
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           10000    |2*(120) = 240
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           10000    |2*(120) = 240
+                    |240_*_ <= 10000 (digito 0-9)
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           10000    |2*(120) = 240
+                    |2404*4 = 9616 (9616 <= 10000)
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           10000    |2*(120) = 240
+           -9616    |2404*4 = 9616
+
+          /---------|12.0
+        \/   145    |__________
+            -144    |2*(12) =24
+            -----   |240*0 <= 1 (digito) 0
+              1     | 
+           ---------|--------------
+            100     |2*(12.)=24
+            -0      |240*0 = (digito) 0
+            -----   |
+            100     |
+           ---------|--------------
+           10000    |2*(120) = 240
+           -9616    |2404*4 = 9616
+            -----   |
+            384     |
+
+
+                          |-------------------
+                         \|/                  |
+          /---------|12.0                     |
+        \/   145    |__________               |
+            -144    |2*(12) =24               |
+            -----   |240*0 <= 1 (digito) 0    |
+              1     |                         |
+           ---------|--------------           |
+            100     |2*(12.)=24               |
+            -0      |240*0 = (digito) 0       |
+            -----   |                         |
+            100     |                         |
+           ---------|--------------           |
+           10000    |2*(120) = 240            |
+           -9616    |2404*4 = 9616 (digito 4)-|
+            -----   |
+            384     |
+
+                          |-------------------
+                         \|/                  |
+          /---------|12.0 4                   |
+        \/   145    |__________               |
+            -144    |2*(12) =24               |
+            -----   |240*0 <= 1 (digito) 0    |
+              1     |                         |
+           ---------|--------------           |
+            100     |2*(12.)=24               |
+            -0      |240*0 = (digito) 0       |
+            -----   |                         |
+            100     |                         |
+           ---------|--------------           |
+           10000    |2*(120) = 240            |
+           -9616    |2404*4 = 9616 (digito 4)-|
+            -----   |
+            384     |
+
+
+
+          /---------|12.04                   
+        \/   145    |__________               
+            -144    |2*(12) =24               
+            -----   |240*0 <= 1 (digito) 0    
+              1     |                         
+           ---------|--------------           
+            100     |2*(12.)=24               
+            -0      |240*0 = (digito) 0       
+            -----   |                         
+            100     |                         
+           ---------|--------------           
+           10000    |2*(120) = 240            
+           -9616    |2404*4 = 9616 (digito 4)
+            -----   |
+            384     |
+           ---------|-------------- 
+         sDR+"00"   |2*(result without ".") = dobroDoResultadoAtual
+                    |dobroDoResultadoAtual+"digito" * digito <= sDR = (sub)
+         -sub       |
+            -----   |
+           new sDR  |
+
+        
+
+
+        Repeat this x times for number decimal places you wish
+        ---------------------------------------------------------------------------------
+         sDR+"00"   |2*(result without ".") = dobroDoResultadoAtual
+                    |dobroDoResultadoAtual+"digito" * digito <= sDR = (sub)
+         -sub       |
+            -----   |
+           new sDR  |
+        ---------------------------------------------------------------------------------
+
+
+
+
+
+        Rodrigo Pimentel Satyro(aka Xita)
+        13/jun/2019
+        -Root Algorithm
+
+
+
+
+        
+        */
+
+    </script>
+</body>
+
+</html>
